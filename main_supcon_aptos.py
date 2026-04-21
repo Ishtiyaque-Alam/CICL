@@ -231,6 +231,13 @@ def train(train_loader, model, criterion, optimizer, epoch, opt):
         batch_time.update(time.time() - end)
         end = time.time()
 
+        if idx == 0:
+            print(
+                f"[INFO] Epoch {epoch}: first batch loaded/computed | "
+                f"DT={data_time.val:.3f}s BT={batch_time.val:.3f}s"
+            )
+            sys.stdout.flush()
+
         if (idx + 1) % opt.print_freq == 0:
             print(
                 f"Train: [{epoch}][{idx+1}/{len(train_loader)}]\t"
@@ -272,6 +279,7 @@ def main():
 
     for epoch in range(1, opt.epochs + 1):
         if opt.balance:
+            t_balance0 = time.time()
             ds = train_loader.dataset
             ds.samples = sorted(ds.imgs.copy(), key=lambda x: x[1])
             indices = [
@@ -287,6 +295,8 @@ def main():
                 for j in range(opt.n_cls):
                     order.extend(indices[j][i*class_items_per_batch:(i+1)*class_items_per_batch])
             ds.samples = (np.array(ds.samples)[order]).tolist()
+            t_balance1 = time.time()
+            print(f"[INFO] Epoch {epoch}: balance reindex took {t_balance1 - t_balance0:.2f}s")
 
         adjust_learning_rate(opt, optimizer, epoch)
         t0   = time.time()
