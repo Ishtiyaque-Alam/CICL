@@ -274,7 +274,8 @@ def validate(val_loader, encoder, classifier, criterion, opt, epoch):
         if not torch.is_tensor(labels):
             labels = torch.tensor(labels)
         labels_gpu = labels.long().cuda(non_blocking=True)
-        bsz    = labels_gpu.shape[0]
+        images     = images.cuda(non_blocking=True)
+        bsz        = labels_gpu.shape[0]
 
         feats  = encoder.encoder(images)
         logits = classifier(feats)
