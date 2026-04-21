@@ -214,6 +214,15 @@ def train_epoch(train_loader, encoder, classifier, criterion, optimizer,
 
     end = time.time()
     for idx, (images, labels) in enumerate(train_loader):
+        # Support cases where transforms or datasets return multiple crops
+        # (e.g. TwoCropTransform) or where labels are provided as tuples/lists.
+        if isinstance(images, (list, tuple)):
+            images = images[0]
+
+        if not torch.is_tensor(labels):
+            labels = torch.tensor(labels)
+        labels = labels.long()
+
         images = images.cuda(non_blocking=True)
         labels = labels.cuda(non_blocking=True)
         bsz    = labels.shape[0]
@@ -258,8 +267,12 @@ def validate(val_loader, encoder, classifier, criterion, opt, epoch):
     losses     = AverageMeter()
 
     for images, labels in val_loader:
-        images = images.cuda(non_blocking=True)
-        labels_gpu = labels.cuda(non_blocking=True)
+        if isinstance(images, (list, tuple)):
+            images = images[0]
+
+        if not torch.is_tensor(labels):
+            labels = torch.tensor(labels)
+        labels_gpu = labels.long().cuda(non_blocking=True)
         bsz    = labels_gpu.shape[0]
 
         feats  = encoder.encoder(images)
