@@ -84,7 +84,7 @@ def build_loader(args):
 def load_models(args):
     # ── encoder ──────────────────────────────────────────────────────────
     encoder = SupConResNet(name=args.model)
-    ckpt_enc = torch.load(args.ckpt_encoder, map_location="cpu")
+    ckpt_enc = torch.load(args.ckpt_encoder, map_location="cpu", weights_only=False)
     enc_state = ckpt_enc["model"]
     # strip DataParallel prefix if present
     enc_state = {k.replace("module.", ""): v for k, v in enc_state.items()}
@@ -94,7 +94,7 @@ def load_models(args):
 
     # ── linear classifier ─────────────────────────────────────────────
     classifier = LinearClassifier(name=args.model, num_classes=args.n_cls)
-    ckpt_lin = torch.load(args.ckpt_linear, map_location="cpu")
+    ckpt_lin = torch.load(args.ckpt_linear, map_location="cpu", weights_only=False)
     lin_state = ckpt_lin["classifier"]
     lin_state = {k.replace("module.", ""): v for k, v in lin_state.items()}
     classifier.load_state_dict(lin_state)

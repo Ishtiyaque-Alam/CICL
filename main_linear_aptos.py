@@ -171,7 +171,7 @@ def set_model(opt):
     classifier = LinearClassifier(name=opt.model, num_classes=opt.n_cls)
     criterion  = torch.nn.CrossEntropyLoss()
 
-    ckpt       = torch.load(opt.ckpt, map_location="cpu")
+    ckpt       = torch.load(opt.ckpt, map_location="cpu", weights_only=False)
     state_dict = ckpt["model"]
     state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
 

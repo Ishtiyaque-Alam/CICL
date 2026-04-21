@@ -74,8 +74,19 @@ def parse_option():
     parser.add_argument("--syncBN",  action="store_true")
     parser.add_argument("--warm",    action="store_true")
     parser.add_argument("--trial",   type=str, default="0")
+    parser.add_argument("--allow_kaggle_workers", action="store_true",
+                        help="keep user-specified num_workers on Kaggle")
 
     opt = parser.parse_args()
+
+    # Kaggle notebooks can hang with multi-worker dataloaders in long image pipelines.
+    in_kaggle = any(k.startswith("KAGGLE") for k in os.environ.keys())
+    if in_kaggle and opt.num_workers > 0 and not opt.allow_kaggle_workers:
+        print(
+            f"[WARN] Kaggle detected; forcing num_workers {opt.num_workers} -> 0 "
+            f"to avoid dataloader deadlocks. Use --allow_kaggle_workers to override."
+        )
+        opt.num_workers = 0
 
     if opt.data_folder is None:
         opt.data_folder = "./datasets/"
@@ -139,7 +150,7 @@ def set_loader(opt):
         batch_size=opt.batch_size,
         shuffle=False,
         num_workers=opt.num_workers,
-        pin_memory=True,
+        pin_memory=torch.cuda.is_available(),
     )
 
     if opt.balance:
@@ -241,6 +252,8 @@ def main():
     print(f"[INFO] Balanced: {opt.balance}")
 
     train_loader = set_loader(opt)
+    print(f"[INFO] Train images: {len(train_loader.dataset)}")
+    print(f"[INFO] Workers     : {opt.num_workers}")
 
     if opt.balance:
         ds = train_loader.dataset
@@ -250,6 +263,9 @@ def main():
         max_item            = max(ds.dic.values())
         n_batches           = max_item * opt.n_cls // opt.batch_size
         class_items_per_batch = opt.batch_size // opt.n_cls
+        print(f"[INFO] Classes     : {opt.n_cls}")
+        print(f"[INFO] Largest cls : {max_item}")
+        print(f"[INFO] Batches/ep  : {n_batches}")
 
     model, criterion = set_model(opt)
     optimizer        = set_optimizer(opt, model)
