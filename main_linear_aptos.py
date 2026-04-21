@@ -210,7 +210,8 @@ def train_epoch(train_loader, encoder, classifier, criterion, optimizer,
     for i in range(n_batches):
         for j in range(opt.n_cls):
             order.extend(indices[j][i*class_items_per_batch:(i+1)*class_items_per_batch])
-    ds.samples = (np.array(ds.samples)[order]).tolist()
+    orig = ds.samples[:]
+    ds.samples = [orig[i] for i in order]
 
     end = time.time()
     for idx, (images, labels) in enumerate(train_loader):
